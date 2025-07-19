@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="/static/reset.css">
+    <link rel="stylesheet" href="/static/style.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Todas las tareas</title>
+</head>
+<body>
+    <h1 class="saludo">📋 Todas las Tareas</h1>
+    <h2 class="saludo">Bienvenido, {{ usuario.nombre }}</h2>
+
+    <table class="tareas-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Descripción</th>
+                <th>Fecha Límite</th>
+                <th>Editar</th>
+                <th>Eliminar</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for tarea in tareas %}
+            <tr>
+                <td>{{ tarea.id }}</td>
+                <td>{{ tarea.nombre }}</td>
+                <td>{{ tarea.descripcion }}</td>
+                <td>
+                    {# Formatear la fecha para mostrar solo YYYY-MM-DD HH:MM #}
+                    {{ tarea.fecha_limite.strftime('%Y-%m-%d %H:%M') if tarea.fecha_limite else '' }}
+                </td>
+
+                <td>
+                    <!-- El botón de edición ahora es un enlace -->
+                    <a href="{{ url_for('mostrar_editar_tarea', id_tarea=tarea.id) }}" class="edit-link">✏️</a>
+                </td>
+                <td>
+                    <form action="{{ url_for('dashboard') }}" method="POST">
+                        <input type="hidden" name="accion" value="eliminar">
+                        <input type="hidden" name="id" value="{{ tarea.id }}">
+                        <button type="submit" onclick="return confirm('¿Eliminar?')">🗑️</button>
+                    </form>
+                </td>
+            </tr>
+        {% endfor %}
+    </tbody>
+    </table>
+
+    <h2>Crear tarea:</h2>
+    <form action="{{ url_for('dashboard') }}" method="POST">
+        <input type="hidden" name="accion" value="agregar">
+        <label for="nombre">Nombre:</label>
+        <input type="text" id="nombre" name="nombre" required>
+
+        <label for="descripcion">Descripción:</label>
+        <input type="text" id="descripcion" name="descripcion" required>
+
+        <label for="fecha_limite">Fecha y hora Límite:</label>
+        <input type="datetime-local" id="fecha_limite" name="fecha_limite" required>
+
+        <label for="activa" class="checkbox-label">
+            Activa:
+            <input type="checkbox" id="activa" name="activa" checked>
+        </label>
+
+        <button type="submit">Crear Tarea</button>
+    </form>
+
+    <form action="{{ url_for('logout') }}" method="GET">
+        <button type="submit">Cerrar sesión</button>
+    </form>
+</body>
+</html>
+
+
