@@ -1,4 +1,4 @@
-Flask
-requests
-python-dateutil
+Flask>=2.0
+requests>=2.25
+python-dateutil>=2.8
 
