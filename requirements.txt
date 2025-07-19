@@ -1,0 +1,7 @@
+Requeriments:
+Flask
+datetime
+dateutil
+gunicorn
+requests
+python-dateutil
