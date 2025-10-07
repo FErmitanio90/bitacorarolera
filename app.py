@@ -1,19 +1,21 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash
-from datetime import datetime
-from registro import registrar_usuario
+from flask import Flask, request, render_template, redirect, url_for, flash, session, jsonify
+import requests
+
 from login import login_externo
-from tareas import listar_tareas, agregar_tareas, editar_tareas, eliminar_tareas
-from dateutil import parser  
+from dashboard import agregar_sesiones, listar_sesiones, editar_sesiones, eliminar_sesiones
+from users import registrar_usuario
 
 app = Flask(__name__)
 app.secret_key = "clave_super_secreta"
 
-# Mostrar formulario de registro
+# URL del backend externo
+BACKEND_URL = "https://apiroleraback.onrender.com"
+
+# Registro de usuario
 @app.route("/registro", methods=["GET"])
 def mostrar_registro():
     return render_template("registro.html")
 
-# Procesar registro
 @app.route("/registro", methods=["POST"])
 def registrar():
     nombre = request.form.get("nombre")
@@ -35,9 +37,9 @@ def registrar():
         return redirect(url_for("mostrar_registro"))
 
 # Login
-@app.route("/", methods=["GET"])
+@app.route('/', methods=['GET'])
 def index():
-    return render_template("login.html")
+    return render_template('login.html')
 
 @app.route('/login', methods=['POST'])
 def login():
@@ -51,124 +53,256 @@ def login():
     resultado = login_externo(usuario, password)
 
     if resultado["success"]:
-        session["token"] = resultado["token"]
+        # Guardamos usuario y token externo en la sesión
         session["usuario"] = resultado["usuario"]
+        session["access_token"] = resultado["token"]
+
         flash("Login exitoso", "success")
-        return redirect(url_for("dashboard"))
+        return redirect(url_for("dashboard_view"))
     else:
         flash("Error de login: " + resultado["error"], "danger")
         return redirect(url_for("index"))
 
-# Dashboard: listado + alta/baja/edición
-@app.route("/tareas", methods=['GET', 'POST'])
-def dashboard():
-    if "token" not in session:
+# Dashboard protegido (con token del backend externo)
+
+@app.route("/dashboard", methods=["GET", "POST"])
+def dashboard_view():
+    usuario = session.get("usuario")
+    token = session.get("access_token")
+
+    if not usuario or not token:
+        flash("No hay sesión activa. Por favor, inicia sesión.", "danger")
         return redirect(url_for("index"))
 
-    token = session["token"]
-    usuario_data = session["usuario"]
-    usuario_nombre = usuario_data.get("usuario")
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
 
-    if request.method == 'POST':
+    # --- POST (Manejo de Formularios: Agregar y Eliminar) ---
+    if request.method == "POST":
         accion = request.form.get("accion")
+        print(f"\n[DEBUG FRONT] Acción recibida en POST: {accion}")
 
-        if accion == 'agregar':
-            nombre = request.form.get("nombre")
-            descripcion = request.form.get("descripcion")
-            fecha_limite = request.form.get("fecha_limite")
-            activa = request.form.get("activa") == "on"
+        # Lógica para AGREGAR Sesión
+        if accion == "agregar":
+            cronica = request.form.get("cronica")
+            numero_de_sesion = request.form.get("numero_de_sesion")
+            fecha = request.form.get("fecha")
+            resumen = request.form.get("resumen")
 
-            resultado = agregar_tareas(nombre, usuario_nombre, descripcion, fecha_limite, activa, token=token)
-            flash("Tarea agregada correctamente" if resultado["success"] else f"Error al agregar tarea: {resultado['error']}", "success" if resultado["success"] else "danger")
-            return redirect(url_for("dashboard"))
+            print(f"cronica={cronica}, numero={numero_de_sesion}, fecha={fecha}, resumen={resumen}")
 
-        elif accion == 'editar':
-            id_tarea = request.form.get("id")
-            nombre = request.form.get("nombre")
-            descripcion = request.form.get("descripcion")
-            fecha_limite = request.form.get("fecha_limite")
-            activa = request.form.get("activa") == "on"
+            try:
+                payload = {
+                    "cronica": cronica,
+                    "numero_de_sesion": int(numero_de_sesion) if numero_de_sesion else None,
+                    "fecha": fecha,
+                    "resumen": resumen
+                }
+                print(f"[DEBUG FRONT] Payload enviado al backend: {payload}")
+                response = requests.post(f"{BACKEND_URL}/dashboard", json=payload, headers=headers)
+                
+                if response.status_code == 201:
+                    flash("¡Sesión creada exitosamente!", "success")
+                else:
+                    data = response.json() if response.content else {}
+                    flash(f"Error ({response.status_code}): {data.get('msg', 'Fallo en la API')}", "warning")
 
-            resultado = editar_tareas(id_tarea, nombre, descripcion, fecha_limite, activa, token)
-            flash("Tarea editada correctamente" if resultado["success"] else f"Error al editar tarea: {resultado['error']}", "success" if resultado["success"] else "danger")
-            return redirect(url_for("dashboard"))
+            except ValueError:
+                flash("Número de sesión inválido.", "danger")
+            except requests.exceptions.ConnectionError:
+                flash("Backend no disponible (Error de conexión).", "danger")
+            except Exception as e:
+                flash(f"Error inesperado al agregar: {e}", "danger")
+        
+        # 🎯 Lógica para ELIMINAR Sesión (CORRECCIÓN APLICADA)
+        elif accion == "eliminar":
+            id_sesion = request.form.get("id")
+            print(f"[DEBUG FRONT] Intentando eliminar sesión con ID: {id_sesion}")
+            
+            try:
+                # Usa requests.delete, apuntando a un endpoint que acepte el ID (ej: /dashboard/123)
+                response = requests.delete(f"{BACKEND_URL}/dashboard/{id_sesion}", headers=headers)
+                
+                print(f"[DEBUG FRONT] Status DELETE backend: {response.status_code}")
 
-        elif accion == 'eliminar':
-            id_tarea = request.form.get("id")
-            resultado = eliminar_tareas(id_tarea, token=token)
-            flash("Tarea eliminada correctamente" if resultado["success"] else f"Error al eliminar tarea: {resultado['error']}", "success" if resultado["success"] else "danger")
-            return redirect(url_for("dashboard"))
+                if response.status_code == 200:
+                    flash("Sesión eliminada correctamente.", "success")
+                elif response.status_code == 404:
+                    flash("Error: Sesión no encontrada.", "danger")
+                else:
+                    data = response.json() if response.content else {}
+                    flash(f"Error al eliminar ({response.status_code}): {data.get('msg', 'Fallo en la API')}", "warning")
+            except requests.exceptions.ConnectionError:
+                flash("Backend no disponible (Error de conexión).", "danger")
+            except Exception as e:
+                flash(f"Error inesperado al eliminar: {e}", "danger")
+                
+        return redirect(url_for("dashboard_view"))
 
-    # GET: listar tareas
-    tareas_result = listar_tareas(token=token)
-    tareas = []
+    # --- GET (Listado de Sesiones) ---
+    username_a_mostrar = usuario.get('nombre') if isinstance(usuario, dict) else usuario
 
-    if tareas_result["success"]:
-        tareas = tareas_result["tareas"]
-        for tarea in tareas:
-            if 'fecha_limite' in tarea and tarea['fecha_limite']:
-                try:
-                    tarea['fecha_limite'] = parser.parse(tarea['fecha_limite'])
-                    print(f"✔️ Parseada fecha_limite: {tarea['fecha_limite']} ({type(tarea['fecha_limite'])})")
-                except Exception as e:
-                    print(f"❌ Error al parsear fecha_limite: {e}")
-                    tarea['fecha_limite'] = None
-            else:
-                tarea['fecha_limite'] = None
+    try:
+        response = requests.get(f"{BACKEND_URL}/dashboard", headers=headers)
+        print(f"[DEBUG FRONT] GET backend status: {response.status_code}")
+        print(f"[DEBUG FRONT] GET respuesta: {response.text}")
 
-    else:
-        flash(f"Error al listar tareas: {tareas_result.get('error', 'Error desconocido')}", "danger")
+        if response.status_code == 200:
+            sesiones = response.json()
+            return render_template("dashboard.html", tareas=sesiones, username=username_a_mostrar)
+        else:
+            flash(f"Error ({response.status_code}): {response.json().get('msg', 'Error al obtener sesiones')}", "warning")
+            return render_template("dashboard.html", tareas=[], username=username_a_mostrar)
 
-    return render_template("tareas.html", usuario=usuario_data, tareas=tareas)
+    except Exception as e:
+        flash(f"Error conectando al backend: {e}", "danger")
+        return render_template("dashboard.html", tareas=[], username=username_a_mostrar)
 
-# Mostrar formulario de edición
-@app.route("/editar_tarea/<int:id_tarea>", methods=['GET'])
-def mostrar_editar_tarea(id_tarea):
-    if "token" not in session:
-        return redirect(url_for("index"))
+@app.route("/editar_sesion/<int:id_sesion>", methods=["GET"])
+def editar_sesion_view(id_sesion):
+    token = session.get("access_token")
+    if not token:
+        flash("Debe iniciar sesión.", "warning")
+        return redirect(url_for("login_view"))
 
-    token = session["token"]
-    tareas_result = listar_tareas(token=token)
-    tarea_a_editar = None
+    try:
+        headers = {"Authorization": f"Bearer {token}"}
+        url = f"{BACKEND_URL}/dashboard"
+        response = requests.get(url, headers=headers)
 
-    if tareas_result["success"]:
-        for tarea in tareas_result["tareas"]:
-            if str(tarea.get("id")) == str(id_tarea):
-                tarea_a_editar = tarea
-                if 'fecha_limite' in tarea_a_editar:
-                    fecha_limite_raw = tarea_a_editar['fecha_limite']
-                    if fecha_limite_raw:
-                        try:
-                            tarea_a_editar['fecha_limite'] = datetime.strptime(fecha_limite_raw, '%Y-%m-%dT%H:%M:%S')
-                        except ValueError:
-                            try:
-                                tarea_a_editar['fecha_limite'] = datetime.strptime(fecha_limite_raw, '%Y-%m-%dT%H:%M')
-                            except ValueError:
-                                try:
-                                    tarea_a_editar['fecha_limite'] = datetime.strptime(fecha_limite_raw, '%Y-%m-%d %H:%M')
-                                except ValueError:
-                                    try:
-                                        tarea_a_editar['fecha_limite'] = datetime.strptime(fecha_limite_raw.split('.')[0], '%Y-%m-%d %H:%M:%S')
-                                    except ValueError:
-                                        try:
-                                            tarea_a_editar['fecha_limite'] = datetime.strptime(fecha_limite_raw.split(' ')[0], '%Y-%m-%d')
-                                        except ValueError:
-                                            tarea_a_editar['fecha_limite'] = None
-                    else:
-                        tarea_a_editar['fecha_limite'] = None
+        print("===== DEBUG EDITAR SESIÓN =====")
+        print("ID buscado:", id_sesion)
+        print("Status code backend:", response.status_code)
+        print("Texto backend:", response.text)
+
+        if response.status_code != 200:
+            flash("No se pudo obtener la lista de sesiones.", "danger")
+            return redirect(url_for("dashboard_view"))
+
+        sesiones = response.json()
+        print("Sesiones decodificadas JSON:", sesiones)
+
+        # Buscar la sesión específica
+        sesion = None
+        for s in sesiones:
+            print("Comparando con:", s.get("idsesion"))
+            if int(s.get("idsesion")) == int(id_sesion):
+                sesion = s
                 break
 
-    if not tarea_a_editar:
-        flash("Tarea no encontrada para editar.", "danger")
-        return redirect(url_for("dashboard"))
+        if not sesion:
+            flash(f"No se encontró la sesión #{id_sesion}.", "warning")
+            return redirect(url_for("dashboard_view"))
 
-    return render_template("editar_tarea_form.html", tarea=tarea_a_editar, token=token)
+        print("Sesión encontrada:", sesion)
+        print("===== FIN DEBUG =====")
+
+        return render_template("editar_sesion_form.html", sesion=sesion)
+
+    except Exception as e:
+        print("❌ Excepción capturada:", e)
+        flash("Error al cargar la sesión para editar.", "danger")
+        return redirect(url_for("dashboard_view"))
+
+@app.route("/editar_sesion_submit", methods=["POST"])
+def editar_sesion_submit():
+    token = session.get("access_token")
+    if not token:
+        flash("Debe iniciar sesión.", "warning")
+        return redirect(url_for("login_view"))
+
+    idsesion = request.form.get("idsesion")
+    cronica = request.form.get("cronica")
+    numero_de_sesion = request.form.get("numero_de_sesion")
+    fecha = request.form.get("fecha")
+    resumen = request.form.get("resumen")
+
+    payload = {
+        "idsesion": int(idsesion),
+        "cronica": cronica,
+        "numero_de_sesion": int(numero_de_sesion),
+        "fecha": fecha,
+        "resumen": resumen
+    }
+
+    print("[DEBUG FRONT] Enviando PUT con payload:", payload)
+
+    try:
+        response = requests.put(
+            f"{BACKEND_URL}/dashboard",
+            headers={"Content-Type": "application/json"},
+            json=payload
+        )
+        print("[DEBUG FRONT] Respuesta backend:", response.status_code, response.text)
+
+        if response.status_code == 200:
+            flash("✅ Sesión actualizada correctamente", "success")
+        else:
+            flash(f"❌ Error al actualizar: {response.text}", "danger")
+
+    except Exception as e:
+        print("❌ Error al conectar al backend:", e)
+        flash("Error interno al actualizar sesión.", "danger")
+
+    return redirect(url_for("dashboard_view"))
+
+
+    
+@app.route("/guardar_edicion_sesion/<int:id_sesion>", methods=["POST"])
+def guardar_edicion_sesion(id_sesion):
+    token = session.get("access_token")
+    if not token:
+        flash("Debe iniciar sesión.", "warning")
+        return redirect(url_for("login_view"))
+
+    data = {
+        "cronica": request.form.get("cronica"),
+        "numero_de_sesion": request.form.get("numero_de_sesion"),
+        "fecha": request.form.get("fecha"),
+        "resumen": request.form.get("resumen")
+    }
+
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
+
+    try:
+        url = f"{BACKEND_URL}/dashboard/{id_sesion}"
+        print(f"🔹 Enviando PUT a {url} con data:", data)  # ✅ log de debug
+
+        response = requests.put(url, json=data, headers=headers)
+
+        print(f"🔸 Status code: {response.status_code}")
+        print(f"🔸 Respuesta backend: {response.text}")
+
+        if response.status_code == 200:
+            flash("Sesión actualizada correctamente.", "success")
+        else:
+            flash("No se pudo actualizar la sesión.", "danger")
+            # Mostramos la respuesta en consola para depurar
+            print("❌ PUT error:", response.text)
+
+    except Exception as e:
+        print(f"❌ Error en PUT /dashboard/{id_sesion}: {e}")
+        flash("Error al intentar actualizar la sesión.", "danger")
+
+    return redirect(url_for("dashboard_view"))
+
+
 
 # Logout
-@app.route("/logout")
+@app.route('/logout', methods=['GET'])
 def logout():
     session.clear()
-    return redirect(url_for("index"))
+    flash("Sesión cerrada", "info")
+    return redirect(url_for('index'))
 
+# Inicio del servidor
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, port=5000)
+
+
+

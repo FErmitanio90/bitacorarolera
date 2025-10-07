@@ -1,31 +1,39 @@
-# login.py
 import requests
 
-API_URL = "http://api-todo.mteam.com.ar/api/v1/login"
+API_URL = "https://apiroleraback.onrender.com/login"
 
-def login_externo(usuario, password):
+def login_externo(username, password):
     payload = {
-        "usuario": usuario,
+        "username": username,
         "password": password
     }
-
     try:
         response = requests.post(API_URL, json=payload)
-        if response.status_code == 200:
+
+        print("--- DEBUG API EXTERNA ---")
+        print("Status:", response.status_code)
+        print("Headers:", response.headers)
+        print("Respuesta cruda:", response.text)
+        print("-------------------------")
+
+        try:
             data = response.json()
-            if data.get("status") and data.get("data"):
-                subdata = data["data"]
+        except Exception:
+            return {"success": False, "error": f"Respuesta no es JSON: {response.text}"}
+
+        if response.status_code == 200:
+            # ✅ ahora coincide con tu backend
+            if data.get("success"):
                 return {
                     "success": True,
-                    "token": subdata.get("JWT Token"),
-                    "usuario": subdata.get("usuario")
+                    "usuario": data.get("usuario"),
+                    "token": data.get("access_token"),
+                    "msg": data.get("msg")
                 }
-
             else:
-                return {"success": False, "error": data.get("message")}
+                return {"success": False, "error": data.get("msg")}
         else:
-            return {"success": False, "error": "Código de estado: " + str(response.status_code)}
+            return {"success": False, "error": data.get("error", f"Código de estado: {response.status_code}")}
+
     except Exception as e:
         return {"success": False, "error": str(e)}
-    
-

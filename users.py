@@ -1,13 +1,12 @@
-# registro.py
 import requests
 
-API_URL = "http://api-todo.mteam.com.ar/api/v1/registro"
+API_URL = "https://apiroleraback.onrender.com/users"
 
 def registrar_usuario(nombre, apellido, usuario, password):
     payload = {
         "nombre": nombre,
         "apellido": apellido,
-        "usuario": usuario,
+        "username": usuario,   # ✔ ahora manda lo que viene del form
         "password": password
     }
 
@@ -29,4 +28,5 @@ def registrar_usuario(nombre, apellido, usuario, password):
 
     except Exception as e:
         return {"success": False, "error": str(e)}
+
 
