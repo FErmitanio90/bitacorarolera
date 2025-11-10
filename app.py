@@ -41,7 +41,7 @@ def registrar():
 def index():
     return render_template('login.html')
 
-@app.route('/login', methods=['POST'])
+@app.route('/', methods=['POST'])
 def login():
     usuario = request.form.get("usuario")
     password = request.form.get("password")
