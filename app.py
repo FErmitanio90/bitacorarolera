@@ -9,7 +9,7 @@ app = Flask(__name__)
 app.secret_key = "clave_super_secreta"
 
 # URL del backend externo
-BACKEND_URL = "https://apiroleraback.onrender.com"
+BACKEND_URL = "https://nucleobitacora.onrender.com"
 
 # Registro de usuario
 @app.route("/registro", methods=["GET"])

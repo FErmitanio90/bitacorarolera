@@ -1,7 +1,7 @@
 import requests
 import json # Importar para mejor manejo de errores de JSON
 
-API_URL = "https://apiroleraback.onrender.com/dashboard"
+API_URL = "https://nucleobitacora.onrender.com/dashboard"
 
 # Variable global para guardar el token una vez hecho el login
 JWT_TOKEN = None

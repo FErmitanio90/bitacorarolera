@@ -1,6 +1,6 @@
 import requests
 
-API_URL = "https://apiroleraback.onrender.com/users"
+API_URL = "https://nucleobitacora.onrender.com/users"
 
 def registrar_usuario(nombre, apellido, usuario, password):
     payload = {
