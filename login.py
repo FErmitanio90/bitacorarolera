@@ -7,6 +7,7 @@ def login_externo(username, password):
         "username": username,
         "password": password
     }
+
     try:
         response = requests.post(API_URL, json=payload)
 
@@ -16,24 +17,27 @@ def login_externo(username, password):
         print("Respuesta cruda:", response.text)
         print("-------------------------")
 
+        # Intentar parsear JSON
         try:
             data = response.json()
         except Exception:
             return {"success": False, "error": f"Respuesta no es JSON: {response.text}"}
 
-        if response.status_code == 200:
-            # ✅ ahora coincide con tu backend
-            if data.get("success"):
-                return {
-                    "success": True,
-                    "usuario": data.get("usuario"),
-                    "token": data.get("access_token"),
-                    "msg": data.get("msg")
-                }
-            else:
-                return {"success": False, "error": data.get("msg")}
-        else:
-            return {"success": False, "error": data.get("error", f"Código de estado: {response.status_code}")}
+        # ✅ Login OK
+        if response.status_code == 200 and data.get("success") == True:
+            return {
+                "success": True,
+                "usuario": data.get("usuario"),
+                "token": data.get("access_token"),
+                "msg": data.get("msg")
+            }
+
+        # ❌ Login fallido
+        return {
+            "success": False,
+            "error": data.get("error", "Error desconocido"),
+            "detail": data
+        }
 
     except Exception as e:
         return {"success": False, "error": str(e)}
