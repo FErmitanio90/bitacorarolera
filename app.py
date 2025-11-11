@@ -172,38 +172,24 @@ def editar_sesion_view(id_sesion):
         url = f"{BACKEND_URL}/dashboard"
         response = requests.get(url, headers=headers)
 
-        print("===== DEBUG EDITAR SESIÓN =====")
-        print("ID buscado:", id_sesion)
-        print("Status code backend:", response.status_code)
-        print("Texto backend:", response.text)
-
         if response.status_code != 200:
             flash("No se pudo obtener la lista de sesiones.", "danger")
             return redirect(url_for("dashboard_view"))
 
         sesiones = response.json()
-        print("Sesiones decodificadas JSON:", sesiones)
 
-        # Buscar la sesión específica
-        sesion = None
-        for s in sesiones:
-            print("Comparando con:", s.get("idsesion"))
-            if int(s.get("idsesion")) == int(id_sesion):
-                sesion = s
-                break
+        # Buscar la sesión
+        sesion = next((s for s in sesiones if int(s.get("idsesion")) == id_sesion), None)
 
         if not sesion:
             flash(f"No se encontró la sesión #{id_sesion}.", "warning")
             return redirect(url_for("dashboard_view"))
 
-        print("Sesión encontrada:", sesion)
-        print("===== FIN DEBUG =====")
-
         return render_template("editar_sesion_form.html", sesion=sesion)
 
     except Exception as e:
-        print("❌ Excepción capturada:", e)
-        flash("Error al cargar la sesión para editar.", "danger")
+        print("❌ Excepción:", e)
+        flash("Error al cargar la sesión.", "danger")
         return redirect(url_for("dashboard_view"))
 
 @app.route("/editar_sesion_submit", methods=["POST"])
@@ -213,40 +199,37 @@ def editar_sesion_submit():
         flash("Debe iniciar sesión.", "warning")
         return redirect(url_for("login_view"))
 
-    idsesion = request.form.get("idsesion")
-    cronica = request.form.get("cronica")
-    numero_de_sesion = request.form.get("numero_de_sesion")
-    fecha = request.form.get("fecha")
-    resumen = request.form.get("resumen")
+    id_sesion = request.form.get("idsesion")
 
-    payload = {
-        "idsesion": int(idsesion),
-        "cronica": cronica,
-        "numero_de_sesion": int(numero_de_sesion),
-        "fecha": fecha,
-        "resumen": resumen
+    data = {
+        "cronica": request.form.get("cronica"),
+        "numero_de_sesion": request.form.get("numero_de_sesion"),
+        "fecha": request.form.get("fecha"),
+        "resumen": request.form.get("resumen")
     }
 
-    print("[DEBUG FRONT] Enviando PUT con payload:", payload)
+    url = f"{BACKEND_URL}/dashboard/{id_sesion}"
+
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
 
     try:
-        response = requests.put(
-            f"{BACKEND_URL}/dashboard",
-            headers={"Content-Type": "application/json"},
-            json=payload
-        )
-        print("[DEBUG FRONT] Respuesta backend:", response.status_code, response.text)
+        response = requests.put(url, json=data, headers=headers)
 
         if response.status_code == 200:
-            flash("✅ Sesión actualizada correctamente", "success")
+            flash("Sesión actualizada correctamente.", "success")
         else:
-            flash(f"❌ Error al actualizar: {response.text}", "danger")
+            print("❌ Error PUT:", response.text)
+            flash("No se pudo actualizar la sesión.", "danger")
 
     except Exception as e:
-        print("❌ Error al conectar al backend:", e)
+        print("❌ Excepción:", e)
         flash("Error interno al actualizar sesión.", "danger")
 
     return redirect(url_for("dashboard_view"))
+
 
 
     
@@ -264,34 +247,27 @@ def guardar_edicion_sesion(id_sesion):
         "resumen": request.form.get("resumen")
     }
 
+    url = f"{BACKEND_URL}/dashboard/{id_sesion}"
+
     headers = {
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/json"
     }
 
     try:
-        url = f"{BACKEND_URL}/dashboard/{id_sesion}"
-        print(f"🔹 Enviando PUT a {url} con data:", data)  # ✅ log de debug
-
         response = requests.put(url, json=data, headers=headers)
-
-        print(f"🔸 Status code: {response.status_code}")
-        print(f"🔸 Respuesta backend: {response.text}")
 
         if response.status_code == 200:
             flash("Sesión actualizada correctamente.", "success")
         else:
+            print("❌ Error PUT:", response.text)
             flash("No se pudo actualizar la sesión.", "danger")
-            # Mostramos la respuesta en consola para depurar
-            print("❌ PUT error:", response.text)
 
     except Exception as e:
-        print(f"❌ Error en PUT /dashboard/{id_sesion}: {e}")
+        print("❌ Error PUT:", e)
         flash("Error al intentar actualizar la sesión.", "danger")
 
     return redirect(url_for("dashboard_view"))
-
-
 
 # Logout
 @app.route('/logout', methods=['GET'])
@@ -303,6 +279,3 @@ def logout():
 # Inicio del servidor
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
-
-
-
