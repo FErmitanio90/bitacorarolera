@@ -245,6 +245,7 @@ def guardar_edicion_sesion(id_sesion):
 
     data = {
         "cronica": request.form.get("cronica"),
+        "juego": request.form.get("juego"),
         "numero_de_sesion": request.form.get("numero_de_sesion"),
         "fecha": request.form.get("fecha"),
         "resumen": request.form.get("resumen")
