@@ -1,0 +1,1 @@
+Frontend que permite crear un usuario para poder acceder a un sistema de registro que permite guardar resumenes de las distintas sesiones de rol que se van jugando, asignando una ID único a cada sesión, además de permitir filtrar todas las sesiones pertenecientes a una misma crónica.
