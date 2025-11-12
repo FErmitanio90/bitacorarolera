@@ -79,6 +79,7 @@
                                 <td>{{ sesion.idsesion }}</td> 
                                 
                                 <td>{{ sesion.cronica }}</td>
+                                <td>{{ sesion.juego | default('N/A', true) }}</td> <!-- ✅ Columna Juego -->
                                 <td>{{ sesion.numero_de_sesion }}</td>
                                 
                                 <td>{{ sesion.fecha }}</td> 
