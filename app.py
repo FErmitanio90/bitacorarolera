@@ -87,6 +87,7 @@ def dashboard_view():
         # Lógica para AGREGAR Sesión
         if accion == "agregar":
             cronica = request.form.get("cronica")
+            juego = request.form.get("juego")
             numero_de_sesion = request.form.get("numero_de_sesion")
             fecha = request.form.get("fecha")
             resumen = request.form.get("resumen")
@@ -96,6 +97,7 @@ def dashboard_view():
             try:
                 payload = {
                     "cronica": cronica,
+                    "juego": juego,
                     "numero_de_sesion": int(numero_de_sesion) if numero_de_sesion else None,
                     "fecha": fecha,
                     "resumen": resumen
@@ -203,6 +205,7 @@ def editar_sesion_submit():
 
     data = {
         "cronica": request.form.get("cronica"),
+        "juego": request.form.get("juego"),
         "numero_de_sesion": request.form.get("numero_de_sesion"),
         "fecha": request.form.get("fecha"),
         "resumen": request.form.get("resumen")
