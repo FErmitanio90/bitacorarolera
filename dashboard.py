@@ -7,7 +7,6 @@ API_URL = "https://nucleobitacora.onrender.com/api/dashboard"
 
 JWT_TOKEN = None
 
-
 def set_token(token):
     """Guarda el JWT luego del login."""
     global JWT_TOKEN
@@ -22,8 +21,6 @@ def get_headers():
     if JWT_TOKEN:
         headers["Authorization"] = f"Bearer {JWT_TOKEN}"
     return headers
-
-
 # ============================
 #      AGREGAR SESIONES
 # ============================
@@ -159,8 +156,6 @@ def editar_sesiones(idsesion, cronica=None, numero_de_sesion=None, fecha=None, r
 
     except Exception as e:
         return {"success": False, "error": str(e)}
-
-
 # ============================
 #      ELIMINAR SESIÓN
 # ============================
@@ -184,4 +179,3 @@ def eliminar_sesiones(idsesion):
             }
     except Exception as e:
         return {"success": False, "error": str(e)}
-
