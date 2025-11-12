@@ -121,11 +121,13 @@ def listar_sesiones():
 # ============================
 #      EDITAR SESIONES
 # ============================
-def editar_sesiones(idsesion, cronica=None, numero_de_sesion=None, fecha=None, resumen=None):
+def editar_sesiones(idsesion, cronica=None, juego=None, numero_de_sesion=None, fecha=None, resumen=None):
     payload = {}
 
     if cronica is not None:
         payload["cronica"] = cronica
+    if juego is not None:
+        payload["juego"] = juego
     if numero_de_sesion is not None:
         payload["numero_de_sesion"] = numero_de_sesion
     if fecha is not None:
