@@ -282,7 +282,7 @@ def download_session_proxy(idsesion):
         return redirect(url_for("login_view"))
 
     # 2) construir URL objetivo en el backend (txt endpoint que creaste)
-    backend_endpoint = f"{BACKEND_URL}/dashboard/{idsesion}/txt"
+    backend_endpoint = f"{BACKEND_URL}/dashboard/{idsesion}/pdf"
 
     try:
         # 3) llamar al backend con Authorization y stream=True
