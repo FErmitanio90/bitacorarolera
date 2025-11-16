@@ -1,12 +1,15 @@
-# dashboard frontend
+# dashboard_frontend.py
 import requests
 import json
 
-# === IMPORTANTE: URL CORRECTA DEL BACKEND ===
+# === URL DEL BACKEND ===
 API_URL = "https://nucleobitacora.onrender.com/api/dashboard"
 
 JWT_TOKEN = None
 
+# ============================
+#      TOKEN
+# ============================
 def set_token(token):
     """Guarda el JWT luego del login."""
     global JWT_TOKEN
@@ -15,35 +18,34 @@ def set_token(token):
 
 def get_headers():
     """Headers estándar incluyendo JSON + Bearer Token."""
-    headers = {
-        "Content-Type": "application/json"
-    }
+    headers = {"Content-Type": "application/json"}
     if JWT_TOKEN:
         headers["Authorization"] = f"Bearer {JWT_TOKEN}"
     return headers
+
+
 # ============================
-#      AGREGAR SESIONES
+#      CREAR SESIÓN
 # ============================
-def agregar_sesiones(cronica, numero_de_sesion, fecha, resumen):
+def agregar_sesiones(cronica, juego, numero_de_sesion, fecha, resumen):
     payload = {
         "cronica": cronica,
+        "juego": juego,
         "numero_de_sesion": numero_de_sesion,
         "fecha": fecha,
         "resumen": resumen
     }
-    
-    headers = get_headers()
+
     print(f"\n[DEBUG] POST {API_URL}")
-    print(f"[DEBUG] Headers: {headers}")
+    print(f"[DEBUG] Headers: {get_headers()}")
     print(f"[DEBUG] Payload: {payload}")
 
     try:
-        response = requests.post(API_URL, json=payload, headers=headers)
+        response = requests.post(API_URL, json=payload, headers=get_headers())
 
         print(f"[DEBUG] Status: {response.status_code}")
         print(f"[DEBUG] Respuesta cruda: {response.text}")
 
-        # Intentar parsear JSON
         try:
             data = response.json()
         except json.JSONDecodeError:
@@ -54,31 +56,23 @@ def agregar_sesiones(cronica, numero_de_sesion, fecha, resumen):
             }
 
         if response.status_code == 201:
-            return {"success": True, "message": data.get("msg", "Sesión creada.")}
-        elif response.status_code == 401:
-            return {
-                "success": False,
-                "error": "Token inválido o expirado.",
-                "detail": data.get("msg")
-            }
-        elif response.status_code == 400:
-            return {
-                "success": False,
-                "error": "Datos inválidos.",
-                "detail": data.get("error", data.get("msg"))
-            }
-        else:
-            return {
-                "success": False,
-                "error": f"Error del servidor ({response.status_code})",
-                "detail": data.get("msg", data.get("error"))
-            }
+            return {"success": True, "message": data.get("msg", "Sesión creada correctamente.")}
 
-    except requests.exceptions.ConnectionError:
+        if response.status_code == 400:
+            return {"success": False, "error": "Datos inválidos", "detail": data}
+
+        if response.status_code == 401:
+            return {"success": False, "error": "Token inválido o expirado"}
+
         return {
             "success": False,
-            "error": "No se pudo conectar al servidor (Render está dormido?)."
+            "error": f"Error del servidor ({response.status_code})",
+            "detail": data
         }
+
+    except requests.exceptions.ConnectionError:
+        return {"success": False, "error": "No se pudo conectar al servidor (Render está dormido?)"}
+
     except Exception as e:
         return {"success": False, "error": f"Error inesperado: {e}"}
 
@@ -91,28 +85,26 @@ def listar_sesiones():
 
     try:
         response = requests.get(API_URL, headers=get_headers())
+
         print(f"[DEBUG] Status: {response.status_code}")
         print(f"[DEBUG] Respuesta: {response.text}")
 
         try:
             data = response.json()
         except:
-            return {
-                "success": False,
-                "error": "El servidor devolvió algo que no es JSON.",
-                "detail": response.text
-            }
+            return {"success": False, "error": "Respuesta no JSON", "detail": response.text}
 
         if response.status_code == 200:
             return {"success": True, "tareas": data}
-        elif response.status_code == 401:
+
+        if response.status_code == 401:
             return {"success": False, "error": "Token inválido o expirado"}
-        else:
-            return {
-                "success": False,
-                "error": f"Error {response.status_code}",
-                "detail": data.get("msg")
-            }
+
+        return {
+            "success": False,
+            "error": f"Error {response.status_code}",
+            "detail": data
+        }
 
     except Exception as e:
         return {"success": False, "error": str(e)}
@@ -145,24 +137,30 @@ def editar_sesiones(idsesion, cronica=None, juego=None, numero_de_sesion=None, f
         print(f"[DEBUG] Status: {response.status_code}")
         print(f"[DEBUG] Respuesta: {response.text}")
 
-        data = response.json()
+        try:
+            data = response.json()
+        except:
+            return {"success": False, "error": "Respuesta no JSON", "detail": response.text}
 
         if response.status_code == 200:
-            return {"success": True, "message": data.get("msg", "Sesión actualizada.")}
-        else:
-            return {
-                "success": False,
-                "error": data.get("msg", "Error al editar."),
-                "detail": data.get("error")
-            }
+            return {"success": True, "message": data.get("msg", "Sesión actualizada correctamente.")}
+
+        return {
+            "success": False,
+            "error": data.get("msg", "No se pudo actualizar"),
+            "detail": data
+        }
 
     except Exception as e:
         return {"success": False, "error": str(e)}
+
+
 # ============================
 #      ELIMINAR SESIÓN
 # ============================
 def eliminar_sesiones(idsesion):
     url = f"{API_URL}/{idsesion}"
+
     print(f"\n[DEBUG] DELETE {url}")
 
     try:
@@ -171,13 +169,19 @@ def eliminar_sesiones(idsesion):
         print(f"[DEBUG] Respuesta: {response.text}")
 
         if response.status_code == 200:
-            return {"success": True, "message": "Sesión eliminada"}
-        else:
+            return {"success": True, "message": "Sesión eliminada correctamente"}
+
+        try:
             data = response.json()
-            return {
-                "success": False,
-                "error": data.get("msg", "Error al eliminar"),
-                "detail": data.get("error")
-            }
+        except:
+            return {"success": False, "error": "Respuesta no JSON", "detail": response.text}
+
+        return {
+            "success": False,
+            "error": data.get("msg", "No se pudo eliminar"),
+            "detail": data
+        }
+
     except Exception as e:
         return {"success": False, "error": str(e)}
+
