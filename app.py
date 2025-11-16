@@ -1,4 +1,4 @@
-from flask import Flask, request, render_template, redirect, url_for, flash, session, jsonify
+from flask import Flask, request, render_template, redirect, url_for, flash, session, jsonify, Response
 import requests
 
 from login import login_externo
@@ -273,6 +273,52 @@ def guardar_edicion_sesion(id_sesion):
 
     return redirect(url_for("dashboard_view"))
 
+@app.route("/download_session/<int:idsesion>", methods=["GET"])
+def download_session_proxy(idsesion):
+    # 1) recuperar token del session del usuario
+    token = session.get("access_token")
+    if not token:
+        flash("Debe iniciar sesión para descargar.", "warning")
+        return redirect(url_for("login_view"))
+
+    # 2) construir URL objetivo en el backend (txt endpoint que creaste)
+    backend_endpoint = f"{BACKEND_URL}/dashboard/{idsesion}/txt"
+
+    try:
+        # 3) llamar al backend con Authorization y stream=True
+        resp = requests.get(
+            backend_endpoint,
+            headers={"Authorization": f"Bearer {token}"},
+            stream=True,
+            timeout=30
+        )
+    except requests.exceptions.RequestException as e:
+        flash("No se pudo conectar al backend para descargar el archivo.", "danger")
+        return redirect(url_for("dashboard_view"))
+
+    # 4) si backend responde con error (404,401,405...), reencolar mensaje
+    if resp.status_code != 200:
+        try:
+            data = resp.json()
+            msg = data.get("msg", data.get("error", resp.text))
+        except Exception:
+            msg = resp.text or f"Error {resp.status_code}"
+        flash(f"No se pudo descargar: {msg}", "warning")
+        return redirect(url_for("dashboard_view"))
+
+    # 5) stream del contenido al navegador, preservando headers (Content-Disposition)
+    headers_to_forward = {}
+    if "content-disposition" in resp.headers:
+        headers_to_forward["Content-Disposition"] = resp.headers["content-disposition"]
+    if "content-type" in resp.headers:
+        headers_to_forward["Content-Type"] = resp.headers["content-type"]
+
+    def generate():
+        for chunk in resp.iter_content(chunk_size=8192):
+            if chunk:
+                yield chunk
+
+    return Response(generate(), headers=headers_to_forward)
 # Logout
 @app.route('/logout', methods=['GET'])
 def logout():

@@ -108,11 +108,11 @@
     </a>
 
     <!-- Descargar .txt -->
-    <a href="{{ backend_url }}/dashboard/{{ sesion.idsesion }}/pdf"
-       class="btn btn-sm btn-outline-secondary me-1"
-       title="Descargar TXT">
-       <i class="fas fa-file-txt"></i>
+    <a href="{{ url_for('download_session_proxy', idsesion=sesion.idsesion) }}"
+    class="btn btn-sm btn-outline-secondary" title="Descargar TXT">
+    <i class="fas fa-file-download"></i>
     </a>
+
 
     <!-- Eliminar -->
     <form action="{{ url_for('dashboard_view') }}" method="POST" class="d-inline">
