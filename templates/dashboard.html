@@ -99,16 +99,33 @@
 </a>
 
 
-                                </td>
-                                <td class="text-center">
-                                    <form action="{{ url_for('dashboard_view') }}" method="POST" class="d-inline">
-                                        <input type="hidden" name="accion" value="eliminar">
-                                        <input type="hidden" name="id" value="{{ sesion.idsesion }}">
-                                        <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('¿Está seguro de eliminar esta sesión?')" title="Eliminar Sesión">
-                                            <i class="fas fa-trash-alt"></i>
-                                        </button>
-                                    </form>
-                                </td>
+<td class="text-center">
+    <!-- Editar -->
+    <a href="{{ url_for('editar_sesion_view', id_sesion=sesion.idsesion) }}" 
+       class="btn btn-sm btn-outline-info me-1" 
+       title="Editar Sesión">
+       <i class="fas fa-edit"></i>
+    </a>
+
+    <!-- Descargar PDF -->
+    <a href="{{ backend_url }}/dashboard/{{ sesion.idsesion }}/pdf"
+       class="btn btn-sm btn-outline-secondary me-1"
+       title="Descargar PDF">
+       <i class="fas fa-file-pdf"></i>
+    </a>
+
+    <!-- Eliminar -->
+    <form action="{{ url_for('dashboard_view') }}" method="POST" class="d-inline">
+        <input type="hidden" name="accion" value="eliminar">
+        <input type="hidden" name="id" value="{{ sesion.idsesion }}">
+        <button type="submit" class="btn btn-sm btn-outline-danger" 
+                onclick="return confirm('¿Está seguro de eliminar esta sesión?')" 
+                title="Eliminar Sesión">
+            <i class="fas fa-trash-alt"></i>
+        </button>
+    </form>
+</td>
+
                             </tr>
                         {% else %}
                             <tr>
