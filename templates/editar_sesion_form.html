@@ -70,6 +70,16 @@
     </div>
 
     <div class="mb-3">
+        <label for="director" class="form-label">Director:</label>
+        <input type="text" id="director" name="director" class="form-control" value="{{ sesion.director }}" required>
+    </div>
+
+    <div class="mb-3">
+        <label for="jugadores" class="form-label">Jugadores (separados por comas):</label>
+        <input type="text" id="jugadores" name="jugadores" class="form-control" value="{{ sesion.jugadores }}" required>
+    </div>
+
+    <div class="mb-3">
         <label for="numero_de_sesion" class="form-label">Número de Sesión:</label>
         <input type="number" id="numero_de_sesion" name="numero_de_sesion" class="form-control" value="{{ sesion.numero_de_sesion }}" required>
     </div>

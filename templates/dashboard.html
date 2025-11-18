@@ -67,6 +67,8 @@
                             <th scope="col">ID</th>
                             <th scope="col">Crónica</th>
                             <th scope="col">Juego</th>
+                            <th scope="col">Director</th>
+                            <th scope="col">Jugadores</th>
                             <th scope="col">N° Sesión</th>
                             <th scope="col">Fecha</th>
                             <th scope="col">Resúmen</th>
@@ -80,6 +82,8 @@
                                 
                                 <td>{{ sesion.cronica }}</td>
                                 <td>{{ sesion.juego | default('N/A', true) }}</td> <!-- ✅ Columna Juego -->
+                                <td>{{ sesion.director | default('N/A', true) }}</td> <!-- ✅ Columna Director -->
+                                <td>{{ sesion.jugadores | default('N/A', true) }}</td> <!-- ✅ Columna Jugadores -->
                                 <td>{{ sesion.numero_de_sesion }}</td>
                                 
                                 <td>{{ sesion.fecha }}</td> 
@@ -101,9 +105,9 @@
        <i class="fas fa-edit"></i>
     </a>
 
-    <!-- Descargar .SPF -->
+    <!-- Descargar .PDF -->
     <a href="{{ url_for('download_session_proxy', idsesion=sesion.idsesion) }}"
-    class="btn btn-sm btn-outline-secondary" title="Descargar SPF">
+    class="btn btn-sm btn-outline-secondary" title="Descargar .PDF">
     <i class="fas fa-file-download"></i>
     </a>
 
@@ -144,6 +148,16 @@
                 <div class="mb-3">
                     <label for="juego" class="form-label">Juego:</label>
                     <input type="text" id="cronica" name="juego" class="form-control" required>
+                </div>
+
+                <div class="mb-3">
+                    <label for="director" class="form-label">Director:</label>
+                    <input type="text" id="director" name="director" class="form-control" required>
+                </div>
+
+                <div class="mb-3">
+                    <label for="jugadores" class="form-label">Jugadores (separados por comas):</label>
+                    <input type="text" id="jugadores" name="jugadores" class="form-control" required>
                 </div>
 
                 <div class="mb-3">

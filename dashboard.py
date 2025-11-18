@@ -27,10 +27,12 @@ def get_headers():
 # ============================
 #      CREAR SESIÓN
 # ============================
-def agregar_sesiones(cronica, juego, numero_de_sesion, fecha, resumen):
+def agregar_sesiones(cronica, juego, director, jugadores, numero_de_sesion, fecha, resumen):
     payload = {
         "cronica": cronica,
         "juego": juego,
+        "director": director,
+        "jugadores": jugadores,
         "numero_de_sesion": numero_de_sesion,
         "fecha": fecha,
         "resumen": resumen
@@ -113,13 +115,17 @@ def listar_sesiones():
 # ============================
 #      EDITAR SESIONES
 # ============================
-def editar_sesiones(idsesion, cronica=None, juego=None, numero_de_sesion=None, fecha=None, resumen=None):
+def editar_sesiones(idsesion, cronica=None, juego=None, director=None, jugadores=None, numero_de_sesion=None, fecha=None, resumen=None):
     payload = {}
 
     if cronica is not None:
         payload["cronica"] = cronica
     if juego is not None:
         payload["juego"] = juego
+    if director is not None:
+        payload["director"] = director
+    if jugadores is not None:
+        payload["jugadores"] = jugadores
     if numero_de_sesion is not None:
         payload["numero_de_sesion"] = numero_de_sesion
     if fecha is not None:
