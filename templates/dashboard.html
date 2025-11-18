@@ -45,6 +45,7 @@
                 <h2 class="h4 text-secondary">Bienvenido, {{ username }}</h2> 
             </div>
             <div>
+                <a href="{{ url_for('personajes_view') }}" class="btn btn-outline-primary me-2">Personajes</a>
                 <a href="{{ url_for('logout') }}" class="btn btn-outline-danger me-2">Cerrar Sesión</a>
                 <button class="btn btn-primary" type="button" data-bs-toggle="collapse" data-bs-target="#collapseForm" aria-expanded="false" aria-controls="collapseForm">
                     + Nueva Sesión

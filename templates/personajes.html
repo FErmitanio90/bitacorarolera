@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis personajes</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+</head>
+
+<body class="bg-light">
+
+<div class="container py-4">
+
+    <!-- ALERTAS -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        <div class="mt-3">
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+
+            </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+    {% endwith %}
+
+    <!-- HEADER -->
+    <header class="mb-5 p-3 bg-white rounded-3 shadow-sm d-flex justify-content-between align-items-center">
+        <div>
+            <h1 class="display-5 text-primary">🧙‍♂️ Mis Personajes</h1>
+            <h2 class="h5 text-secondary">Bienvenido, {{ username }}</h2>
+        </div>
+        <div>
+            <a href="{{ url_for('dashboard') }}" class="btn btn-outline-primary me-2">Dashboard</a>
+            <a href="{{ url_for('logout') }}" class="btn btn-outline-danger me-2">Cerrar Sesión</a>
+            <button class="btn btn-primary" type="button" 
+                    data-bs-toggle="collapse" data-bs-target="#collapseForm">
+                + Nuevo Personaje
+            </button>
+        </div>
+    </header>
+
+    <!-- FORMULARIO NUEVO PERSONAJE -->
+    <div id="collapseForm" class="collapse mb-4">
+        <div class="card card-body shadow-sm">
+            {% include 'partials/form_personaje.html' %}
+        </div>
+    </div>
+
+    <!-- LISTADO DE PERSONAJES -->
+    <div class="card p-4 shadow-sm">
+        <h3 class="card-title mb-4 text-primary">Listado de personajes</h3>
+
+        <!-- Buscador -->
+        <input type="text" id="buscador" class="form-control mb-4" placeholder="Buscar personaje...">
+
+        <!-- LISTADO -->
+        {% for personaje in personajes %}
+        <details class="mb-3 p-3 bg-white rounded border shadow-sm">
+            <summary class="h5 text-dark">
+                {{ personaje.nombre }} {{ personaje.apellido }}
+            </summary>
+
+            <div class="mt-3">
+
+                <p><strong>ID:</strong> {{ personaje.idpersonaje }}</p>
+                <p><strong>Género:</strong> {{ personaje.genero | default('N/A') }}</p>
+                <p><strong>Edad:</strong> {{ personaje.edad | default('N/A') }}</p>
+                <p><strong>Etnia:</strong> {{ personaje.etnia | default('N/A') }}</p>
+                <p><strong>Ocupación:</strong> {{ personaje.ocupacion | default('N/A') }}</p>
+                <p><strong>Descripción:</strong> {{ personaje.descripcion | default('N/A') }}</p>
+
+                <details class="mt-2">
+                    <summary><strong>Historia de fondo</strong></summary>
+                    <p class="mt-2">{{ personaje.historia | default('N/A') }}</p>
+                </details>
+
+                <details class="mt-2">
+                    <summary><strong>Inventario</strong></summary>
+                    <ul class="mt-2">
+                        {% if personaje.inventario %}
+                            {% for item in personaje.inventario %}
+                                <li>
+                                    {{ item.item }} — 
+                                    <span class="text-muted">Cantidad: {{ item.cantidad }}</span>
+                                </li>
+                            {% endfor %}
+                        {% else %}
+                            <li class="text-muted">N/A</li>
+                        {% endif %}
+                    </ul>
+                </details>
+
+
+                <p><strong>Notas:</strong> {{ personaje.notas | default('N/A') }}</p>
+
+                <!-- BOTONES -->
+                <div class="mt-3">
+
+                    <!-- Editar -->
+                    <a href="{{ url_for('editar_personaje_view', id_personaje=personaje.idpersonaje) }}"
+                       class="btn btn-outline-info btn-sm me-2">
+                        <i class="fas fa-edit"></i> Editar
+                    </a>
+
+                    <!-- Descargar PDF -->
+                    <a href="{{ url_for('download_personaje_pdf', idpersonaje=personaje.idpersonaje) }}"
+                       class="btn btn-outline-secondary btn-sm me-2">
+                        <i class="fas fa-file-download"></i> PDF
+                    </a>
+
+                    <!-- Eliminar -->
+                    <form action="{{ url_for('eliminar_personaje_view', id_personaje=personaje.idpersonaje) }}"
+                          method="post" class="d-inline">
+                        <button type="submit" class="btn btn-outline-danger btn-sm"
+                                onclick="return confirm('¿Seguro que deseas eliminar este personaje?')">
+                            <i class="fas fa-trash-alt"></i> Eliminar
+                        </button>
+                    </form>
+
+                </div>
+
+            </div>
+
+        </details>
+        {% else %}
+        <p class="text-muted">No hay personajes cargados aún.</p>
+        {% endfor %}
+
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>
+
+    
