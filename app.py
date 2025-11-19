@@ -379,7 +379,10 @@ def personajes_view():
         flash("Debes iniciar sesión", "warning")
         return redirect(url_for("login_view"))
 
-    set_token(token)  # asigna token al módulo frontend
+    # Asignar el token al módulo frontend
+    set_token(token)
+
+    # Obtener la lista de personajes
     resultado = listar_personajes()
 
     if resultado["success"]:
