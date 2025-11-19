@@ -76,23 +76,24 @@ def agregar_personaje(cronica, juego, nombre, apellido, edad, genero, ocupacion,
 #      LISTAR PERSONAJES
 # ============================
 def listar_personajes():
+    print(f"\n[DEBUG] GET {API_URL}")
     try:
         response = requests.get(API_URL, headers=get_headers())
-        data = safe_json(response)
+        print(f"[DEBUG] Status: {response.status_code}")
+        print(f"[DEBUG] Respuesta: {response.text}")
+
+        try:
+            data = response.json()
+        except:
+            return {"success": False, "error": "Respuesta no JSON", "detail": response.text}
 
         if response.status_code == 200:
-            # Caso 1: el backend devuelve directamente un array
-            if isinstance(data, list):
-                return {"success": True, "personajes": data}
+            return {"success": True, "personajes": data}
 
-            # Caso 2: el backend devuelve {"success": True, "data": [...]}
-            if data.get("success"):
-                return {"success": True, "personajes": data.get("data", [])}
+        if response.status_code == 401:
+            return {"success": False, "error": "Token inválido o expirado"}
 
-            # Caso 3: cualquier otro objeto
-            return {"success": False, "error": data.get("error", "Error del backend")}
-
-        return {"success": False, "error": data.get("msg", "Error al obtener lista")}
+        return {"success": False, "error": f"Error {response.status_code}", "detail": data}
 
     except Exception as e:
         return {"success": False, "error": str(e)}
