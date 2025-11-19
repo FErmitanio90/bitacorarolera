@@ -67,21 +67,17 @@ def listar_personajes():
         response = requests.get(API_URL, headers=get_headers())
         data = safe_json(response)
 
-        # Si el backend devuelve lista directamente
-        if isinstance(data, list):
-            return {"success": True, "personajes": data}
-
-        # Si el backend devuelve dict con data
-        if isinstance(data, dict):
-            if "data" in data:
-                return {"success": True, "personajes": data["data"]}
-            elif "success" in data and data["success"] and "data" in data:
-                return {"success": True, "personajes": data["data"]}
+        if response.status_code == 200:
+            # data puede ser lista o dict
+            if isinstance(data, list):
+                return {"success": True, "personajes": data}
             else:
-                # Error del backend
-                return {"success": False, "error": data.get("msg", data.get("error", "Error al obtener lista"))}
-
-        return {"success": False, "error": "Respuesta inesperada del servidor"}
+                return {"success": False, "error": "Formato inesperado de la respuesta"}
+        else:
+            if isinstance(data, dict):
+                return {"success": False, "error": data.get("msg", data.get("error", "Error al obtener personajes"))}
+            else:
+                return {"success": False, "error": "Error al obtener personajes"}
 
     except Exception as e:
         return {"success": False, "error": str(e)}
@@ -127,8 +123,9 @@ def eliminar_personaje(idpersonaje):
 #      FUNCIÓN UTIL
 # ============================
 def safe_json(response):
-    """Evita errores si el backend no puede parsear JSON."""
+    """Evita errores si el backend no puede parsear JSON (mismo patrón que dashboard)."""
     try:
         return response.json()
-    except Exception:
+    except json.JSONDecodeError:
         return {"msg": "Respuesta inválida del servidor", "raw": response.text}
+
