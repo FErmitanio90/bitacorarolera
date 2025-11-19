@@ -6,7 +6,6 @@ import json
 # Token JWT compartido, igual que en dashboard.py
 JWT_TOKEN = None
 
-
 # ============================
 #     CONFIGURACIÓN API
 # ============================
@@ -49,7 +48,6 @@ def agregar_personaje(cronica, juego, nombre, apellido, edad, genero, ocupacion,
 
     try:
         response = requests.post(API_URL, json=payload, headers=get_headers())
-
         data = safe_json(response)
 
         if response.status_code == 201:
@@ -67,13 +65,23 @@ def agregar_personaje(cronica, juego, nombre, apellido, edad, genero, ocupacion,
 def listar_personajes():
     try:
         response = requests.get(API_URL, headers=get_headers())
-
         data = safe_json(response)
 
-        if response.status_code == 200:
+        # Si el backend devuelve lista directamente
+        if isinstance(data, list):
             return {"success": True, "personajes": data}
 
-        return {"success": False, "error": data.get("msg", "Error al obtener lista")}
+        # Si el backend devuelve dict con data
+        if isinstance(data, dict):
+            if "data" in data:
+                return {"success": True, "personajes": data["data"]}
+            elif "success" in data and data["success"] and "data" in data:
+                return {"success": True, "personajes": data["data"]}
+            else:
+                # Error del backend
+                return {"success": False, "error": data.get("msg", data.get("error", "Error al obtener lista"))}
+
+        return {"success": False, "error": "Respuesta inesperada del servidor"}
 
     except Exception as e:
         return {"success": False, "error": str(e)}
@@ -83,12 +91,10 @@ def listar_personajes():
 #      EDITAR PERSONAJE
 # ============================
 def editar_personajes(idpersonaje, **kwargs):
-
     payload = {k: v for k, v in kwargs.items() if v is not None}
 
     try:
         response = requests.put(f"{API_URL}/{idpersonaje}", json=payload, headers=get_headers())
-
         data = safe_json(response)
 
         if response.status_code == 200:
@@ -106,7 +112,6 @@ def editar_personajes(idpersonaje, **kwargs):
 def eliminar_personaje(idpersonaje):
     try:
         response = requests.delete(f"{API_URL}/{idpersonaje}", headers=get_headers())
-
         data = safe_json(response)
 
         if response.status_code == 200:
@@ -122,8 +127,8 @@ def eliminar_personaje(idpersonaje):
 #      FUNCIÓN UTIL
 # ============================
 def safe_json(response):
-    """Evita errores si el backend no puede parsear JSON (mismo patrón que dashboard)."""
+    """Evita errores si el backend no puede parsear JSON."""
     try:
         return response.json()
-    except json.JSONDecodeError:
+    except Exception:
         return {"msg": "Respuesta inválida del servidor", "raw": response.text}
