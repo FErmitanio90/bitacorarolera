@@ -372,6 +372,7 @@ from personajes import set_token, listar_personajes
 
 @app.route("/personajes", methods=["GET"])
 def personajes_view():
+    # Obtener usuario y token
     username = session.get("username")
     token = session.get("jwt") or session.get("access_token")
 
@@ -379,17 +380,19 @@ def personajes_view():
         flash("Debes iniciar sesión", "warning")
         return redirect(url_for("login_view"))
 
-    # Asignar el token al módulo frontend
+    # Asignar token al módulo frontend
     set_token(token)
 
-    # Obtener la lista de personajes
+    # Llamar a la función listar_personajes()
     resultado = listar_personajes()
 
     if resultado["success"]:
         personajes = resultado["personajes"]
     else:
         personajes = []
+        # Mostrar mensaje de error y loguear la respuesta cruda
         flash(f"Error obteniendo personajes: {resultado['error']}", "danger")
+        print("❌ Respuesta cruda del backend:", resultado)
 
     return render_template("personajes.html", personajes=personajes, username=username)
 
