@@ -27,10 +27,23 @@ def get_headers():
 
 
 # ============================
+#      FUNCIÓN UTIL
+# ============================
+def safe_json(response):
+    """
+    Evita errores si el backend no puede parsear JSON.
+    Devuelve diccionario con info útil en caso de error.
+    """
+    try:
+        return response.json()
+    except json.JSONDecodeError:
+        return {"msg": "Respuesta inválida del servidor", "raw": response.text}
+
+
+# ============================
 #      AGREGAR PERSONAJE
 # ============================
 def agregar_personaje(cronica, juego, nombre, apellido, edad, genero, ocupacion, etnia, descripcion, historia, inventario, notas):
-
     payload = {
         "cronica": cronica,
         "juego": juego,
@@ -68,10 +81,16 @@ def listar_personajes():
         data = safe_json(response)
 
         if response.status_code == 200:
+            # Caso 1: el backend devuelve directamente un array
+            if isinstance(data, list):
+                return {"success": True, "personajes": data}
+
+            # Caso 2: el backend devuelve {"success": True, "data": [...]}
             if data.get("success"):
                 return {"success": True, "personajes": data.get("data", [])}
-            else:
-                return {"success": False, "error": data.get("error", "Error del backend")}
+
+            # Caso 3: cualquier otro objeto
+            return {"success": False, "error": data.get("error", "Error del backend")}
 
         return {"success": False, "error": data.get("msg", "Error al obtener lista")}
 
@@ -114,14 +133,4 @@ def eliminar_personaje(idpersonaje):
     except Exception as e:
         return {"success": False, "error": str(e)}
 
-
-# ============================
-#      FUNCIÓN UTIL
-# ============================
-def safe_json(response):
-    """Evita errores si el backend no puede parsear JSON (mismo patrón que dashboard)."""
-    try:
-        return response.json()
-    except json.JSONDecodeError:
-        return {"msg": "Respuesta inválida del servidor", "raw": response.text}
 
