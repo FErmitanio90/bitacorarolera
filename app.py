@@ -484,48 +484,6 @@ def editar_personaje_submit():
         flash("Error interno al actualizar personaje.", "danger")
 
     return redirect(url_for("personajes_view"))
-
-@app.route('/personajes/eliminar/<int:id_personaje>', methods=['POST'])
-def eliminar_personaje_view(id_personaje):
-    token = session.get("access_token")
-    
-    if not token:
-        flash("Debe iniciar sesión.", "warning")
-        return redirect(url_for("index"))
-
-    headers = {
-        "Authorization": f"Bearer {token}",
-        "Content-Type": "application/json"
-    }
-
-    url = f"{BACKEND_URL}/personajes/{id_personaje}"
-
-    try:
-        response = requests.delete(url, headers=headers)
-
-        # Intentar decodificar JSON (a veces el backend no envía nada)
-        try:
-            data = response.json()
-        except:
-            data = {}
-
-        if response.status_code == 200:
-            flash("Personaje eliminado correctamente.", "success")
-        elif response.status_code == 404:
-            flash("El personaje no existe o ya fue eliminado.", "warning")
-        elif response.status_code == 401:
-            flash("No autorizado. Inicie sesión nuevamente.", "danger")
-        else:
-            flash(
-                f"Error ({response.status_code}): {data.get('msg', data.get('message', 'Fallo al eliminar personaje'))}",
-                "danger"
-            )
-
-    except Exception as e:
-        print("❌ Excepción:", e)
-        flash("Error de conexión con el backend.", "danger")
-
-    return redirect(url_for("personajes_view"))
 #Descargar personaje PDF
 @app.route('/personajes/<int:id_personaje>/download_pdf', methods=['GET'])
 def download_personaje_pdf(id_personaje):
