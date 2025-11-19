@@ -2,177 +2,100 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Editar Personaje</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
-<body class="bg-light">
-
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-
-            <!-- Header -->
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h2 class="text-primary">✏️ Editar Personaje</h2>
-                <a href="{{ url_for('personajes_view') }}" class="btn btn-outline-secondary">Volver</a>
+<body class="p-4">
+    <div class="container">
+        <h2>Editar Personaje: {{ personaje.nombre }} {{ personaje.apellido }}</h2>
+        <form id="editarForm">
+            <div class="mb-3">
+                <label>Nombre</label>
+                <input type="text" name="nombre" class="form-control" value="{{ personaje.nombre }}">
             </div>
-
-            <!-- Formulario -->
-            <div class="card shadow-sm p-4">
-                <form action="{{ url_for('editar_personaje_submit') }}" method="POST" id="form-personaje">
-
-                    <input type="hidden" name="id" value="{{ personaje.idpersonaje }}">
-
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label class="form-label">Nombre</label>
-                            <input type="text" class="form-control" name="nombre" value="{{ personaje.nombre }}" required>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Apellido</label>
-                            <input type="text" class="form-control" name="apellido" value="{{ personaje.apellido }}" required>
-                        </div>
-                    </div>
-
-                    <div class="row mb-3">
-                        <div class="col-md-4">
-                            <label class="form-label">Edad</label>
-                            <input type="number" class="form-control" name="edad" value="{{ personaje.edad }}">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Género</label>
-                            <input type="text" class="form-control" name="genero" value="{{ personaje.genero }}">
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label">Etnia / Raza</label>
-                            <input type="text" class="form-control" name="etnia" value="{{ personaje.etnia }}">
-                        </div>
-                    </div>
-
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <label class="form-label">Ocupación</label>
-                            <input type="text" class="form-control" name="ocupacion" value="{{ personaje.ocupacion }}">
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Descripción corta</label>
-                            <input type="text" class="form-control" name="descripcion" value="{{ personaje.descripcion }}">
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Historia del personaje</label>
-                        <textarea class="form-control" name="historia" rows="4">{{ personaje.historia }}</textarea>
-                    </div>
-
-                    <!-- Inventario dinámico -->
-                    <div class="mb-3">
-                        <label class="form-label">Inventario</label>
-
-                        <div id="inventario-list">
-                            {% for item in personaje.inventario or [] %}
-                            <div class="row g-2 mb-2 inventario-item">
-                                <div class="col-7">
-                                    <input type="text" class="form-control item-nombre" value="{{ item.item }}" placeholder="Nombre del ítem">
-                                </div>
-                                <div class="col-3">
-                                    <input type="number" class="form-control item-cantidad" value="{{ item.cantidad }}" min="0">
-                                </div>
-                                <div class="col-2">
-                                    <button type="button" class="btn btn-danger w-100 remove-item">X</button>
-                                </div>
-                            </div>
-                            {% endfor %}
-                        </div>
-
-                        <button type="button" class="btn btn-sm btn-primary mt-2" id="add-item">
-                            + Agregar ítem
-                        </button>
-
-                        <input type="hidden" name="inventario" id="inventario-json">
-                    </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Notas adicionales</label>
-                        <textarea class="form-control" name="notas" rows="3">{{ personaje.notas }}</textarea>
-                    </div>
-
-                    <div class="d-flex justify-content-between mt-4">
-                        <a href="{{ url_for('personajes_view') }}" class="btn btn-secondary">Cancelar</a>
-                        <button type="submit" class="btn btn-primary">Guardar Cambios</button>
-                    </div>
-
-                </form>
+            <div class="mb-3">
+                <label>Apellido</label>
+                <input type="text" name="apellido" class="form-control" value="{{ personaje.apellido }}">
             </div>
-
-        </div>
+            <div class="mb-3">
+                <label>Edad</label>
+                <input type="number" name="edad" class="form-control" value="{{ personaje.edad }}">
+            </div>
+            <div class="mb-3">
+                <label>Género</label>
+                <input type="text" name="genero" class="form-control" value="{{ personaje.genero }}">
+            </div>
+            <div class="mb-3">
+                <label>Ocupación</label>
+                <input type="text" name="ocupacion" class="form-control" value="{{ personaje.ocupacion }}">
+            </div>
+            <div class="mb-3">
+                <label>Etnia</label>
+                <input type="text" name="etnia" class="form-control" value="{{ personaje.etnia }}">
+            </div>
+            <div class="mb-3">
+                <label>Descripción</label>
+                <textarea name="descripcion" class="form-control">{{ personaje.descripcion }}</textarea>
+            </div>
+            <div class="mb-3">
+                <label>Historia</label>
+                <textarea name="historia" class="form-control">{{ personaje.historia }}</textarea>
+            </div>
+            <div class="mb-3">
+                <label>Inventario (JSON)</label>
+                <textarea name="inventario" class="form-control">{{ personaje.inventario }}</textarea>
+            </div>
+            <div class="mb-3">
+                <label>Notas</label>
+                <textarea name="notas" class="form-control">{{ personaje.notas }}</textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+            <a href="{{ url_for('personajes_bp.listar_personajes') }}" class="btn btn-secondary">Cancelar</a>
+        </form>
     </div>
-</div>
 
-<script>
-// --- Agregar item ---
-document.getElementById("add-item").addEventListener("click", function () {
-    const container = document.getElementById("inventario-list");
-    const div = document.createElement("div");
-    div.className = "row g-2 mb-2 inventario-item";
-    div.innerHTML = `
-        <div class="col-7">
-            <input type="text" class="form-control item-nombre" placeholder="Nombre del ítem">
-        </div>
-        <div class="col-3">
-            <input type="number" class="form-control item-cantidad" value="1" min="0">
-        </div>
-        <div class="col-2">
-            <button type="button" class="btn btn-danger w-100 remove-item">X</button>
-        </div>
-    `;
-    container.appendChild(div);
-});
+    <script>
+    const form = document.getElementById("editarForm");
+    form.addEventListener("submit", async (e) => {
+        e.preventDefault();
 
-// --- Eliminar item ---
-document.addEventListener("click", function (e) {
-    if (e.target.classList.contains("remove-item")) {
-        e.target.closest(".inventario-item").remove();
-    }
-});
+        const id = {{ personaje.idpersonaje }};
+        const token = localStorage.getItem("jwt_token"); // o como guardes el JWT
 
-// --- Crear JSON del inventario ANTES de enviar ---
-document.getElementById("form-personaje").addEventListener("submit", function (e) {
-    const items = [];
-    document.querySelectorAll(".inventario-item").forEach(row => {
-        const nombre = row.querySelector(".item-nombre").value.trim();
-        const cantidad = row.querySelector(".item-cantidad").value;
+        const payload = {
+            nombre: form.nombre.value,
+            apellido: form.apellido.value,
+            edad: parseInt(form.edad.value),
+            genero: form.genero.value,
+            ocupacion: form.ocupacion.value,
+            etnia: form.etnia.value,
+            descripcion: form.descripcion.value,
+            historia: form.historia.value,
+            notas: form.notas.value,
+            inventario: JSON.parse(form.inventario.value || "[]")
+        };
 
-        if (nombre !== "") {
-            items.push({
-                item: nombre,
-                cantidad: parseInt(cantidad) || 0
+        try {
+            const res = await fetch(`/personajes/${id}`, {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify(payload)
             });
+
+            const data = await res.json();
+            if (res.ok) {
+                alert("Personaje actualizado correctamente");
+                window.location.href = "/personajes";
+            } else {
+                alert("Error al actualizar: " + data.error || JSON.stringify(data));
+            }
+        } catch (err) {
+            alert("Error de red: " + err);
         }
     });
-
-    document.getElementById("inventario-json").value = JSON.stringify(items);
-});
-</script>
-
+    </script>
 </body>
 </html>
-                    </ul>
-                </details>
-
-                <div class="mt-4">
-                    <a href="{{ url_for('editar_personaje_view', id=personaje.idpersonaje) }}" class="btn btn-sm btn-warning me-2">Editar</a>
-                    <a href="{{ url_for('eliminar_personaje', id=personaje.idpersonaje) }}" class="btn btn-sm btn-danger"
-                       onclick="return confirm('¿Estás seguro de que deseas eliminar este personaje?');">
-                        Eliminar
-                    </a>
-                </div>
-
-            </div>
-        </details>
-        {% else %}
-        <p class="text-muted">No hay personajes creados aún.</p>
-        {% endfor %}
-
-    </div>
