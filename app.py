@@ -328,11 +328,8 @@ def download_session_proxy(idsesion):
 
     return Response(generate(), headers=headers_to_forward)
 
-# ============================================================
-# PERSONAJES (Estructura clonada del dashboard)
-# ============================================================
-
-@app.route("/personajes", methods=["GET", "POST"])
+# Personajes
+@app.route('/personajes', methods=['GET', 'POST'])
 def personajes_view():
     usuario = session.get("usuario")
     token = session.get("access_token")
@@ -346,135 +343,118 @@ def personajes_view():
         "Content-Type": "application/json"
     }
 
-    # ------------------------- POST --------------------------
     if request.method == "POST":
         accion = request.form.get("accion")
-        print(f"\n[DEBUG FRONT] Acción Personajes POST: {accion}")
 
-        # ---------- Crear personaje ----------
-        if accion == "agregar":
-            try:
-                payload = {
-                    "cronica": request.form.get("cronica"),
-                    "juego": request.form.get("juego"),
-                    "nombre": request.form.get("nombre"),
-                    "apellido": request.form.get("apellido"),
-                    "edad": request.form.get("edad"),
-                    "genero": request.form.get("genero"),
-                    "ocupacion": request.form.get("ocupacion"),
-                    "etnia": request.form.get("etnia"),
-                    "descripcion": request.form.get("descripcion"),
-                    "historia": request.form.get("historia"),
-                    "inventario": request.form.get("inventario"),
-                    "notas": request.form.get("notas")
-                }
+        cronica = request.form.get("cronica")
+        juego = request.form.get("juego")
+        nombre = request.form.get("nombre")
+        apellido = request.form.get("apellido")
+        genero = request.form.get("genero")
+        edad = request.form.get("edad")
+        ocupacion = request.form.get("ocupacion")
+        etnia = request.form.get("etnia")
+        descripcion = request.form.get("descripcion")
+        historia = request.form.get("historia")
+        inventario = request.form.get("inventario")
+        notas = request.form.get("notas")
 
-                print(f"[DEBUG FRONT] Payload Personaje: {payload}")
+        try:
+            payload = {
+                "cronica": cronica,
+                "juego": juego,
+                "nombre": nombre,
+                "apellido": apellido,
+                "edad": edad,
+                "genero": genero,
+                "ocupacion": ocupacion,
+                "etnia": etnia,
+                "descripcion": descripcion,
+                "historia": historia,
+                "inventario": inventario,
+                "notas": notas
+            }
 
-                response = requests.post(
-                    f"{BACKEND_URL}/personajes",
-                    json=payload,
-                    headers=headers
-                )
+            response = requests.post(
+                f"{BACKEND_URL}/personajes",
+                json=payload,
+                headers=headers
+            )
 
-                if response.status_code == 201:
-                    flash("¡Personaje creado exitosamente!", "success")
-                else:
-                    data = response.json() if response.content else {}
-                    flash(f"Error ({response.status_code}): {data.get('msg', 'Fallo en la API')}", "warning")
+            if response.status_code == 201:
+                flash("¡Personaje creado exitosamente!", "success")
+            else:
+                try:
+                    data = response.json()
+                except:
+                    data = {}
+                flash(f"Error ({response.status_code}): {data.get('msg', 'Fallo en la API')}", "warning")
 
-            except Exception as e:
-                flash(f"Error inesperado al agregar personaje: {e}", "danger")
+        except Exception as e:
+            flash(f"Error en conexión con el backend: {str(e)}", "danger")
 
-        # ---------- Eliminar personaje ----------
-        elif accion == "eliminar":
-            id_personaje = request.form.get("id")
-            print(f"[DEBUG FRONT] Intentando eliminar personaje ID: {id_personaje}")
+    return render_template("personajes.html")
 
-            try:
-                response = requests.delete(f"{BACKEND_URL}/personajes/{id_personaje}", headers=headers)
+@app.route('/personajes/listar', methods=['GET'])
+def listar_personajes_view():
+    usuario = session.get("usuario")
+    token = session.get("access_token")
 
-                if response.status_code == 200:
-                    flash("Personaje eliminado correctamente.", "success")
-                elif response.status_code == 404:
-                    flash("Personaje no encontrado.", "danger")
-                else:
-                    data = response.json() if response.content else {}
-                    flash(f"Error al eliminar ({response.status_code}): {data.get('msg','Fallo en la API')}", "warning")
+    if not usuario or not token:
+        flash("No hay sesión activa. Por favor, inicia sesión.", "danger")
+        return redirect(url_for("index"))
 
-            except Exception as e:
-                flash(f"Error inesperado al eliminar personaje: {e}", "danger")
-
-        return redirect(url_for("personajes_view"))
-
-    # ------------------------- GET --------------------------
-    username_a_mostrar = usuario.get('nombre') if isinstance(usuario, dict) else usuario
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
 
     try:
         response = requests.get(f"{BACKEND_URL}/personajes", headers=headers)
-        print(f"[DEBUG FRONT] GET Personajes status: {response.status_code}")
 
         if response.status_code == 200:
             personajes = response.json()
-            return render_template("personajes.html", personajes=personajes, username=username_a_mostrar)
+            return render_template("listar_personajes.html", personajes=personajes)
         else:
-            flash(f"Error ({response.status_code}): {response.json().get('msg', 'Error al obtener personajes')}", "warning")
-            return render_template("personajes.html", personajes=[], username=username_a_mostrar)
+            flash(f"Error ({response.status_code}): No se pudieron obtener los personajes.", "warning")
+            return render_template("listar_personajes.html", personajes=[])
 
     except Exception as e:
         flash(f"Error conectando al backend: {e}", "danger")
-        return render_template("personajes.html", personajes=[], username=username_a_mostrar)
-
-
-
-# ============================================================
-# EDITAR PERSONAJE
-# ============================================================
-
-@app.route("/personajes/editar/<int:id_personaje>", methods=["GET"])
+        return render_template("listar_personajes.html", personajes=[])
+    
+@app.route('/personajes/editar/<int:id_personaje>', methods=['GET'])
 def editar_personaje_view(id_personaje):
     token = session.get("access_token")
-
     if not token:
         flash("Debe iniciar sesión.", "warning")
         return redirect(url_for("index"))
 
     try:
         headers = {"Authorization": f"Bearer {token}"}
-        response = requests.get(f"{BACKEND_URL}/personajes", headers=headers)
+        url = f"{BACKEND_URL}/personajes/{id_personaje}"
+        response = requests.get(url, headers=headers)
 
         if response.status_code != 200:
-            flash("No se pudo obtener la lista de personajes.", "danger")
+            flash("No se pudo obtener el personaje solicitado.", "danger")
             return redirect(url_for("personajes_view"))
 
-        personajes = response.json()
-
-        personaje = next((p for p in personajes if int(p.get("idpersonaje")) == id_personaje), None)
-
-        if not personaje:
-            flash("Personaje no encontrado.", "warning")
-            return redirect(url_for("personajes_view"))
+        personaje = response.json()
 
         return render_template("editar_personaje_form.html", personaje=personaje)
 
     except Exception as e:
-        flash(f"Error al cargar el personaje: {e}", "danger")
+        print("❌ Excepción:", e)
+        flash("Error al cargar el personaje.", "danger")
         return redirect(url_for("personajes_view"))
-
-
-
-# ============================================================
-# GUARDAR EDICIÓN
-# ============================================================
-
-@app.route("/personajes/editar_submit", methods=["POST"])
+@app.route('/personajes/editar_submit', methods=['POST'])
 def editar_personaje_submit():
     token = session.get("access_token")
     if not token:
         flash("Debe iniciar sesión.", "warning")
         return redirect(url_for("index"))
 
-    id_personaje = request.form.get("idpersonaje")
+    id_personaje = request.form.get("id")
 
     data = {
         "cronica": request.form.get("cronica"),
@@ -491,27 +471,71 @@ def editar_personaje_submit():
         "notas": request.form.get("notas")
     }
 
+    url = f"{BACKEND_URL}/personajes/{id_personaje}"
+
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
+
     try:
-        headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
-        response = requests.put(f"{BACKEND_URL}/personajes/{id_personaje}", json=data, headers=headers)
+        response = requests.put(url, json=data, headers=headers)
 
         if response.status_code == 200:
             flash("Personaje actualizado correctamente.", "success")
         else:
+            print("❌ Error PUT:", response.text)
             flash("No se pudo actualizar el personaje.", "danger")
 
     except Exception as e:
-        flash(f"Error interno al actualizar personaje: {e}", "danger")
+        print("❌ Excepción:", e)
+        flash("Error interno al actualizar personaje.", "danger")
 
     return redirect(url_for("personajes_view"))
 
+@app.route('/personajes/eliminar/<int:id_personaje>', methods=['POST'])
+def eliminar_personaje_view(id_personaje):
+    token = session.get("access_token")
+    
+    if not token:
+        flash("Debe iniciar sesión.", "warning")
+        return redirect(url_for("index"))
 
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
 
-# ============================================================
-# DESCARGAR PDF
-# ============================================================
+    url = f"{BACKEND_URL}/personajes/{id_personaje}"
 
-@app.route("/personajes/<int:id_personaje>/download_pdf", methods=["GET"])
+    try:
+        response = requests.delete(url, headers=headers)
+
+        # Intentar decodificar JSON (a veces el backend no envía nada)
+        try:
+            data = response.json()
+        except:
+            data = {}
+
+        if response.status_code == 200:
+            flash("Personaje eliminado correctamente.", "success")
+        elif response.status_code == 404:
+            flash("El personaje no existe o ya fue eliminado.", "warning")
+        elif response.status_code == 401:
+            flash("No autorizado. Inicie sesión nuevamente.", "danger")
+        else:
+            flash(
+                f"Error ({response.status_code}): {data.get('msg', data.get('message', 'Fallo al eliminar personaje'))}",
+                "danger"
+            )
+
+    except Exception as e:
+        print("❌ Excepción:", e)
+        flash("Error de conexión con el backend.", "danger")
+
+    return redirect(url_for("personajes_view"))
+#Descargar personaje PDF
+@app.route('/personajes/<int:id_personaje>/download_pdf', methods=['GET'])
 def download_personaje_pdf(id_personaje):
     token = session.get("access_token")
     if not token:
@@ -527,18 +551,24 @@ def download_personaje_pdf(id_personaje):
             stream=True,
             timeout=30
         )
-    except Exception:
+    except requests.exceptions.RequestException as e:
         flash("No se pudo conectar al backend para descargar el archivo.", "danger")
         return redirect(url_for("personajes_view"))
 
     if resp.status_code != 200:
-        flash("Error al generar PDF.", "warning")
+        try:
+            data = resp.json()
+            msg = data.get("msg", data.get("error", resp.text))
+        except Exception:
+            msg = resp.text or f"Error {resp.status_code}"
+        flash(f"No se pudo descargar: {msg}", "warning")
         return redirect(url_for("personajes_view"))
 
-    headers_to_forward = {
-        "Content-Disposition": resp.headers.get("content-disposition", ""),
-        "Content-Type": resp.headers.get("content-type", "application/pdf")
-    }
+    headers_to_forward = {}
+    if "content-disposition" in resp.headers:
+        headers_to_forward["Content-Disposition"] = resp.headers["content-disposition"]
+    if "content-type" in resp.headers:
+        headers_to_forward["Content-Type"] = resp.headers["content-type"]
 
     def generate():
         for chunk in resp.iter_content(chunk_size=8192):
