@@ -9,7 +9,7 @@ JWT_TOKEN = None
 # ============================
 #     CONFIGURACIÓN API
 # ============================
-API_URL = "https://nucleobitacora.onrender.com/api/personajes"
+API_URL = "https://nucleobitacora.onrender.com/personajes"
 
 
 def set_token(token):
