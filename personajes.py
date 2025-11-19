@@ -67,17 +67,17 @@ def listar_personajes():
         response = requests.get(API_URL, headers=get_headers())
         data = safe_json(response)
 
-        # Ajuste: si backend devuelve dict con success/data
-        if response.status_code == 200 and isinstance(data, dict):
+        if response.status_code == 200:
             if data.get("success"):
                 return {"success": True, "personajes": data.get("data", [])}
             else:
-                return {"success": False, "error": data.get("msg", "Error al obtener personajes")}
-        else:
-            return {"success": False, "error": "Formato inesperado de la respuesta"}
+                return {"success": False, "error": data.get("error", "Error del backend")}
+
+        return {"success": False, "error": data.get("msg", "Error al obtener lista")}
 
     except Exception as e:
         return {"success": False, "error": str(e)}
+
 
 # ============================
 #      EDITAR PERSONAJE
