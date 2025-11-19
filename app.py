@@ -368,6 +368,8 @@ def crear_personaje_view():
     return redirect(url_for("personajes_view"))
 
 
+from personajes import set_token, listar_personajes
+
 @app.route("/personajes", methods=["GET"])
 def personajes_view():
     username = session.get("username")
@@ -377,18 +379,17 @@ def personajes_view():
         flash("Debes iniciar sesión", "warning")
         return redirect(url_for("login_view"))
 
-    API_URL = "https://nucleobitacora.onrender.com/api/personajes"
+    set_token(token)  # asigna token al módulo frontend
+    resultado = listar_personajes()
 
-    try:
-        response = requests.get(API_URL, headers={"Authorization": f"Bearer {token}"})
-        personajes = response.json() if response.status_code == 200 else []
-        if response.status_code != 200:
-            flash("Error obteniendo personajes", "danger")
-    except Exception:
+    if resultado["success"]:
+        personajes = resultado["personajes"]
+    else:
         personajes = []
-        flash("No se pudo conectar al backend", "danger")
+        flash(f"Error obteniendo personajes: {resultado['error']}", "danger")
 
     return render_template("personajes.html", personajes=personajes, username=username)
+
 
 @app.route("/personajes/eliminar/<int:id_personaje>", methods=["POST"])
 def eliminar_personaje_view(id_personaje):
