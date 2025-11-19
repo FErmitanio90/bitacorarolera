@@ -329,100 +329,92 @@ def download_session_proxy(idsesion):
     return Response(generate(), headers=headers_to_forward)
 
 # Personajes
-@app.route('/personajes', methods=['GET', 'POST'])
-def personajes_view():
-    usuario = session.get("usuario")
-    token = session.get("access_token")
+@app.route("/personajes/crear", methods=["POST"])
+def crear_personaje_view():
+    token = session.get("jwt") or session.get("access_token")
 
-    if not usuario or not token:
-        flash("No hay sesión activa. Por favor, inicia sesión.", "danger")
-        return redirect(url_for("index"))
+    if not token:
+        flash("Debes iniciar sesión.", "warning")
+        return redirect(url_for("login_view"))
 
-    headers = {
-        "Authorization": f"Bearer {token}",
-        "Content-Type": "application/json"
-    }
+    headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
 
-    if request.method == "POST":
-        accion = request.form.get("accion")
-
-        cronica = request.form.get("cronica")
-        juego = request.form.get("juego")
-        nombre = request.form.get("nombre")
-        apellido = request.form.get("apellido")
-        genero = request.form.get("genero")
-        edad = request.form.get("edad")
-        ocupacion = request.form.get("ocupacion")
-        etnia = request.form.get("etnia")
-        descripcion = request.form.get("descripcion")
-        historia = request.form.get("historia")
-        inventario = request.form.get("inventario")
-        notas = request.form.get("notas")
-
-        try:
-            payload = {
-                "cronica": cronica,
-                "juego": juego,
-                "nombre": nombre,
-                "apellido": apellido,
-                "edad": edad,
-                "genero": genero,
-                "ocupacion": ocupacion,
-                "etnia": etnia,
-                "descripcion": descripcion,
-                "historia": historia,
-                "inventario": inventario,
-                "notas": notas
-            }
-
-            response = requests.post(
-                f"{BACKEND_URL}/personajes",
-                json=payload,
-                headers=headers
-            )
-
-            if response.status_code == 201:
-                flash("¡Personaje creado exitosamente!", "success")
-            else:
-                try:
-                    data = response.json()
-                except:
-                    data = {}
-                flash(f"Error ({response.status_code}): {data.get('msg', 'Fallo en la API')}", "warning")
-
-        except Exception as e:
-            flash(f"Error en conexión con el backend: {str(e)}", "danger")
-
-    return render_template("personajes.html")
-
-@app.route('/personajes/listar', methods=['GET'])
-def listar_personajes_view():
-    usuario = session.get("usuario")
-    token = session.get("access_token")
-
-    if not usuario or not token:
-        flash("No hay sesión activa. Por favor, inicia sesión.", "danger")
-        return redirect(url_for("index"))
-
-    headers = {
-        "Authorization": f"Bearer {token}",
-        "Content-Type": "application/json"
+    data = {
+        "cronica": request.form.get("cronica"),
+        "juego": request.form.get("juego"),
+        "nombre": request.form.get("nombre"),
+        "apellido": request.form.get("apellido"),
+        "edad": request.form.get("edad"),
+        "genero": request.form.get("genero"),
+        "ocupacion": request.form.get("ocupacion"),
+        "etnia": request.form.get("etnia"),
+        "descripcion": request.form.get("descripcion"),
+        "historia": request.form.get("historia"),
+        "inventario": request.form.get("inventario"),
+        "notas": request.form.get("notas"),
     }
 
     try:
-        response = requests.get(f"{BACKEND_URL}/personajes", headers=headers)
+        response = requests.post(f"{BACKEND_URL}/personajes", json=data, headers=headers)
 
-        if response.status_code == 200:
-            personajes = response.json()
-            return render_template("listar_personajes.html", personajes=personajes)
+        if response.status_code == 201:
+            flash("¡Personaje creado con éxito!", "success")
         else:
-            flash(f"Error ({response.status_code}): No se pudieron obtener los personajes.", "warning")
-            return render_template("listar_personajes.html", personajes=[])
+            flash("Error creando personaje", "danger")
 
     except Exception as e:
         flash(f"Error conectando al backend: {e}", "danger")
-        return render_template("listar_personajes.html", personajes=[])
-    
+
+    return redirect(url_for("personajes_view"))
+
+
+@app.route("/personajes", methods=["GET"])
+def personajes_view():
+    username = session.get("username")
+    token = session.get("jwt") or session.get("access_token")
+
+    if not token:
+        flash("Debes iniciar sesión", "warning")
+        return redirect(url_for("login_view"))
+
+    API_URL = "https://nucleobitacora.onrender.com/api/personajes"
+
+    try:
+        response = requests.get(API_URL, headers={"Authorization": f"Bearer {token}"})
+        personajes = response.json() if response.status_code == 200 else []
+        if response.status_code != 200:
+            flash("Error obteniendo personajes", "danger")
+    except Exception:
+        personajes = []
+        flash("No se pudo conectar al backend", "danger")
+
+    return render_template("personajes.html", personajes=personajes, username=username)
+
+@app.route("/personajes/eliminar/<int:id_personaje>", methods=["POST"])
+def eliminar_personaje_view(id_personaje):
+    token = session.get("jwt") or session.get("access_token")
+
+    if not token:
+        flash("Debes iniciar sesión.", "warning")
+        return redirect(url_for("login_view"))
+
+    headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
+
+    try:
+        url = f"{BACKEND_URL}/personajes/{id_personaje}"
+        response = requests.delete(url, headers=headers)
+
+        if response.status_code == 200:
+            flash("Personaje eliminado correctamente.", "success")
+        else:
+            flash(f"Error eliminando personaje ({response.status_code})", "danger")
+
+    except Exception as e:
+        flash(f"Error conectando al backend: {e}", "danger")
+
+    return redirect(url_for("personajes_view"))
+
+
 @app.route('/personajes/editar/<int:id_personaje>', methods=['GET'])
 def editar_personaje_view(id_personaje):
     token = session.get("access_token")

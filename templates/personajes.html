@@ -21,7 +21,6 @@
             <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
                 {{ message }}
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
-
             </div>
             {% endfor %}
         </div>
@@ -47,7 +46,57 @@
     <!-- FORMULARIO NUEVO PERSONAJE -->
     <div id="collapseForm" class="collapse mb-4">
         <div class="card card-body shadow-sm">
-            {% include 'partials/form_personaje.html' %}
+            <form action="{{ url_for('crear_personaje_view') }}" method="POST">
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label" for="nombre">Nombre</label>
+                        <input type="text" class="form-control" id="nombre" name="nombre" required>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="apellido">Apellido</label>
+                        <input type="text" class="form-control" id="apellido" name="apellido" required>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label class="form-label" for="edad">Edad</label>
+                        <input type="number" class="form-control" id="edad" name="edad">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label" for="genero">Género</label>
+                        <input type="text" class="form-control" id="genero" name="genero">
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label" for="etnia">Etnia / Raza</label>
+                        <input type="text" class="form-control" id="etnia" name="etnia">
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label" for="ocupacion">Ocupación</label>
+                        <input type="text" class="form-control" id="ocupacion" name="ocupacion">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label" for="descripcion">Descripción</label>
+                        <input type="text" class="form-control" id="descripcion" name="descripcion">
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label" for="historia">Historia</label>
+                    <textarea class="form-control" id="historia" name="historia" rows="3"></textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label" for="notas">Notas</label>
+                    <textarea class="form-control" id="notas" name="notas" rows="2"></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-success">Guardar Personaje</button>
+            </form>
         </div>
     </div>
 
@@ -66,7 +115,6 @@
             </summary>
 
             <div class="mt-3">
-
                 <p><strong>ID:</strong> {{ personaje.idpersonaje }}</p>
                 <p><strong>Género:</strong> {{ personaje.genero | default('N/A') }}</p>
                 <p><strong>Edad:</strong> {{ personaje.edad | default('N/A') }}</p>
@@ -84,10 +132,7 @@
                     <ul class="mt-2">
                         {% if personaje.inventario %}
                             {% for item in personaje.inventario %}
-                                <li>
-                                    {{ item.item }} — 
-                                    <span class="text-muted">Cantidad: {{ item.cantidad }}</span>
-                                </li>
+                                <li>{{ item.item }} — <span class="text-muted">Cantidad: {{ item.cantidad }}</span></li>
                             {% endfor %}
                         {% else %}
                             <li class="text-muted">N/A</li>
@@ -99,7 +144,6 @@
 
                 <!-- BOTONES -->
                 <div class="mt-3">
-
                     <!-- Editar -->
                     <a href="{{ url_for('editar_personaje_view', id_personaje=personaje.idpersonaje) }}"
                        class="btn btn-outline-info btn-sm me-2">
@@ -120,11 +164,8 @@
                             <i class="fas fa-trash-alt"></i> Eliminar
                         </button>
                     </form>
-
                 </div>
-
             </div>
-
         </details>
         {% else %}
         <p class="text-muted">No hay personajes cargados aún.</p>
@@ -138,5 +179,6 @@
 
 </body>
 </html>
+
 
     
