@@ -67,6 +67,7 @@ def listar_personajes():
         response = requests.get(API_URL, headers=get_headers())
         data = safe_json(response)
 
+        # Ajuste: si backend devuelve dict con success/data
         if response.status_code == 200 and isinstance(data, dict):
             if data.get("success"):
                 return {"success": True, "personajes": data.get("data", [])}
