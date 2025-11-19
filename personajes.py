@@ -1,7 +1,8 @@
+#personajes.py frontend
 import requests
 import json
 
-API_URL = "https://nucleobitacora.onrender.com/api/personajes"
+API_URL = "https://nucleobitacora.onrender.com/personajes"
 
 def get_headers():
     """Headers estándar incluyendo JSON + Bearer Token."""
