@@ -20,7 +20,7 @@
 
             <!-- Formulario -->
             <div class="card shadow-sm p-4">
-                <form action="{{ url_for('editar_personaje_submit') }}" method="POST">
+                <form action="{{ url_for('editar_personaje_submit') }}" method="POST" id="form-personaje">
 
                     <input type="hidden" name="id" value="{{ personaje.idpersonaje }}">
 
@@ -66,7 +66,7 @@
                         <textarea class="form-control" name="historia" rows="4">{{ personaje.historia }}</textarea>
                     </div>
 
-                                        <!-- Inventario como lista -->
+                    <!-- Inventario dinámico -->
                     <div class="mb-3">
                         <label class="form-label">Inventario</label>
 
@@ -74,10 +74,10 @@
                             {% for item in personaje.inventario or [] %}
                             <div class="row g-2 mb-2 inventario-item">
                                 <div class="col-7">
-                                    <input type="text" class="form-control" name="item_nombre" value="{{ item.item }}" placeholder="Nombre del ítem">
+                                    <input type="text" class="form-control item-nombre" value="{{ item.item }}" placeholder="Nombre del ítem">
                                 </div>
                                 <div class="col-3">
-                                    <input type="number" class="form-control" name="item_cantidad" value="{{ item.cantidad }}" min="0">
+                                    <input type="number" class="form-control item-cantidad" value="{{ item.cantidad }}" min="0">
                                 </div>
                                 <div class="col-2">
                                     <button type="button" class="btn btn-danger w-100 remove-item">X</button>
@@ -90,10 +90,8 @@
                             + Agregar ítem
                         </button>
 
-                        <!-- Campo oculto para enviar JSON -->
                         <input type="hidden" name="inventario" id="inventario-json">
                     </div>
-
 
                     <div class="mb-3">
                         <label class="form-label">Notas adicionales</label>
@@ -104,23 +102,77 @@
                         <a href="{{ url_for('personajes_view') }}" class="btn btn-secondary">Cancelar</a>
                         <button type="submit" class="btn btn-primary">Guardar Cambios</button>
                     </div>
+
                 </form>
             </div>
 
         </div>
     </div>
 </div>
+
 <script>
-function updateInventarioJson() {
-    const textarea = document.getElementById("inventario");
-    try {
-        JSON.parse(textarea.value);
-        textarea.classList.remove("is-invalid");
-    } catch (e) {
-        textarea.classList.add("is-invalid");
+// --- Agregar item ---
+document.getElementById("add-item").addEventListener("click", function () {
+    const container = document.getElementById("inventario-list");
+    const div = document.createElement("div");
+    div.className = "row g-2 mb-2 inventario-item";
+    div.innerHTML = `
+        <div class="col-7">
+            <input type="text" class="form-control item-nombre" placeholder="Nombre del ítem">
+        </div>
+        <div class="col-3">
+            <input type="number" class="form-control item-cantidad" value="1" min="0">
+        </div>
+        <div class="col-2">
+            <button type="button" class="btn btn-danger w-100 remove-item">X</button>
+        </div>
+    `;
+    container.appendChild(div);
+});
+
+// --- Eliminar item ---
+document.addEventListener("click", function (e) {
+    if (e.target.classList.contains("remove-item")) {
+        e.target.closest(".inventario-item").remove();
     }
-}
+});
+
+// --- Crear JSON del inventario ANTES de enviar ---
+document.getElementById("form-personaje").addEventListener("submit", function (e) {
+    const items = [];
+    document.querySelectorAll(".inventario-item").forEach(row => {
+        const nombre = row.querySelector(".item-nombre").value.trim();
+        const cantidad = row.querySelector(".item-cantidad").value;
+
+        if (nombre !== "") {
+            items.push({
+                item: nombre,
+                cantidad: parseInt(cantidad) || 0
+            });
+        }
+    });
+
+    document.getElementById("inventario-json").value = JSON.stringify(items);
+});
 </script>
 
 </body>
 </html>
+                    </ul>
+                </details>
+
+                <div class="mt-4">
+                    <a href="{{ url_for('editar_personaje_view', id=personaje.idpersonaje) }}" class="btn btn-sm btn-warning me-2">Editar</a>
+                    <a href="{{ url_for('eliminar_personaje', id=personaje.idpersonaje) }}" class="btn btn-sm btn-danger"
+                       onclick="return confirm('¿Estás seguro de que deseas eliminar este personaje?');">
+                        Eliminar
+                    </a>
+                </div>
+
+            </div>
+        </details>
+        {% else %}
+        <p class="text-muted">No hay personajes creados aún.</p>
+        {% endfor %}
+
+    </div>

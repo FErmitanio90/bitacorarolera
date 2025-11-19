@@ -35,7 +35,7 @@
             <h2 class="h5 text-secondary">Bienvenido, {{ username }}</h2>
         </div>
         <div>
-            <a href="{{ url_for('dashboard') }}" class="btn btn-outline-primary me-2">Dashboard</a>
+            <a href="{{ url_for('dashboard_view') }}" class="btn btn-outline-primary me-2">Dashboard</a>
             <a href="{{ url_for('logout') }}" class="btn btn-outline-danger me-2">Cerrar Sesión</a>
             <button class="btn btn-primary" type="button" 
                     data-bs-toggle="collapse" data-bs-target="#collapseForm">
@@ -95,7 +95,6 @@
                     </ul>
                 </details>
 
-
                 <p><strong>Notas:</strong> {{ personaje.notas | default('N/A') }}</p>
 
                 <!-- BOTONES -->
@@ -108,7 +107,7 @@
                     </a>
 
                     <!-- Descargar PDF -->
-                    <a href="{{ url_for('download_personaje_pdf', idpersonaje=personaje.idpersonaje) }}"
+                    <a href="{{ url_for('download_personaje_pdf', id_personaje=personaje.idpersonaje) }}"
                        class="btn btn-outline-secondary btn-sm me-2">
                         <i class="fas fa-file-download"></i> PDF
                     </a>
